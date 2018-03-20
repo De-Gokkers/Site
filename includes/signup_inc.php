@@ -1,74 +1,58 @@
 <?php
 
-if (isset($_POST['submit'])) {
-    require('dbh_inc.php');
 
-    $email = $_POST['email'];
-    $pass = $_POST['password'];
-    $username = $_POST['username'];
-    $hash = password_hash($pass, PASSWORD_DEFAULT);
-    $query = $db->prepare("SELECT email FROM users WHERE email = ?");
-    $query->bindValue(1, $email);
+if (isset($_POST['submit'])){
+
+    include 'dbh_inc.php';
+
+    $u_name = $_POST['username'];
+    $u_email = $_POST['email'];
+    $u_pwd = $_POST['password'];
+    $hash = password_hash($u_pwd, PASSWORD_DEFAULT);
+    $query = $conn->prepare("SELECT email FROM users WHERE email = ?");
+    $query->bindValue(1, $u_email);
     $query->execute();
 
-    if (filter_var($email, FILTER_VALIDATE_EMAIL)){
-        echo ('1');
 
-        if (!empty($pass)){
+    //error handlers
+    //check for empty fields
+    if (empty($u_email) || empty($u_name) || empty($u_pwd)){
+        header("location: ../index.php?signup=empty");
+        exit();
+    }else{
+        //check if input characters are valid
+        if (preg_match("/^[a-zA-Z]*$/", $u_email)){
+            header("location: ../index.php?signup=invalid");
 
-
-              if (!empty($username)){
-
-
-                  if (!empty($email)){
-
-                      $pdoQry_users = 'INSERT INTO users(user_email, user_pwd, username) VALUES (:email, :password, :username)';
-                      $pdoResult = $db->prepare($pdoQry_users);
-                      $pdoExec = $pdoResult->execute(array(":email" => $email,":username" => $username,  ":password" => $hash));
-                      header('location: ../index.php?message=Registered!!');
-
-                  }
-
-              }else{
-                  ('Fields empty');
-              }
-
-        } else{
-            echo ('Fields empty');
-        }
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-    /*if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        if (!$query->rowCount() > 0){
-            ($passwordlenght = strlen($_POST['password'])
-            // change the 1 back to 7 when done testing
-            if ($passwordlenght > 7)
-
-            $pdoQry_users = 'INSERT INTO users(user_email, user_pwd, username) VALUES (:email, :password, :username)';
-            $pdoResult = $db->prepare($pdoQry_users);
-            $pdoExec = $pdoResult->execute(array(":email" => $email,":username" => $username,  ":password" => $hash));
-            header('location: ../index.php?message=Registered!!');
+            exit();
         }else{
-            echo 'Error, email already in use';
+            //check if email is valid
+            if (!filter_var($u_email, FILTER_VALIDATE_EMAIL)){
+                header("location: ../index.php?signup=email");
+                exit();
+            }else{
+
+
+                if ( $u_email > 0){
+                    header("location: ../index.php?signup=email taken");
+                    exit();
+                }else{
+                    //hashing the password
+                    $hashedPwd = password_hash($u_pwd, PASSWORD_DEFAULT);
+                    //insert the user into the database
+                    $pdoQry_users = 'INSERT INTO gokkers(u_name, u_email, u_pwd) VALUES (:username, :email, :password)';
+                    $pdoResult = $conn->prepare($pdoQry_users);
+                    $pdoExec = $pdoResult->execute(array(":email" => $u_email,":username" => $u_name,  ":password" => $hashedPwd));
+                    header("location: ../index.php?signup=success");
+
+                }
+            }
         }
     }
-}else{
-    echo 'Error, failed to insert data.';
-    die();
+} else {
+    header("location: ../index.php");
+    exit();
 }
-    */
-
 
 
 
